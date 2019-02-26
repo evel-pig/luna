@@ -48,6 +48,6 @@ export default function connect<OwnProps = any>(mapStateToProps) {
       return props;
     };
 
-    return rrConnect(mapState2Props, null, null, { withRef: true })(Component) as React.ComponentClass<OwnProps>;
+    return rrConnect(mapState2Props, null, null, { forwardRef: true })(Component) as React.ComponentClass<OwnProps>;
   };
 }
