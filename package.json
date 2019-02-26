@@ -1,5 +1,5 @@
 {
-  "name": "@ep/luna",
+  "name": "@epig/luna",
   "version": "1.0.0",
   "description": "基于redux和redux-saga的数据流框架",
   "main": "index.js",
