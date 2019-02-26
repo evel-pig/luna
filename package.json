@@ -1,0 +1,112 @@
+{
+  "name": "@ep/luna",
+  "version": "0.0.1",
+  "description": "基于redux和redux-saga的数据流框架",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "rm -rf lib && tsc",
+    "precommit": "lint-staged && tsc",
+    "prepublish": "npm run build"
+  },
+  "lint-staged": {
+    "src/**/*.tsx": [
+      "tslint -c tslint.json",
+      "jest --findRelatedTests"
+    ],
+    "src/**/*.ts": [
+      "tslint -c tslint.json",
+      "jest --findRelatedTests"
+    ]
+  },
+  "files": [
+    "lib",
+    "connect.js",
+    "dynamic.js",
+    "DynamicComponent.js",
+    "index.js",
+    "model.js",
+    "*.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evel-pig/luna.git"
+  },
+  "keywords": [
+    "redux",
+    "redux-saga"
+  ],
+  "author": "infeng",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/evel-pig/luna/issues"
+  },
+  "homepage": "https://github.com/evel-pig/luna#readme",
+  "devDependencies": {
+    "@types/jest": "^22.0.0",
+    "@types/node": "^8.5.2",
+    "@types/react": "^16.8.5",
+    "@types/react-dom": "^16.8.2",
+    "@types/redux-actions": "^2.3.1",
+    "babel-jest": "^22.0.4",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "enzyme-to-json": "^3.3.4",
+    "husky": "^0.14.3",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^22.4.4",
+    "jest-fetch-mock": "^2.1.0",
+    "lint-staged": "^7.1.2",
+    "npm-run-script": "0.0.4",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
+    "rimraf": "^2.6.2",
+    "ts-jest": "^22.4.6",
+    "tslint": "^5.10.0",
+    "tslint-eslint-rules": "^5.3.1",
+    "tslint-language-service": "^0.9.9",
+    "tslint-react": "^3.6.0",
+    "typescript": "^3.0.1"
+  },
+  "peerDependencies": {
+    "react": ">=16.3.0",
+    "react-dom": ">=16.3.0"
+  },
+  "dependencies": {
+    "es6-promise": "^4.2.6",
+    "isomorphic-fetch": "^2.2.1",
+    "react-redux": "^6.0.1",
+    "redux": "^4.0.1",
+    "redux-actions": "^2.6.4",
+    "redux-saga": "^0.16.0"
+  },
+  "jest": {
+    "testURL": "http://localhost/",
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js",
+      "\\.js$": "<rootDir>/node_modules/babel-jest"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less)$": "identity-obj-proxy"
+    },
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "snapshotSerializers": [
+      "enzyme-to-json/serializer"
+    ],
+    "roots": [
+      "./src"
+    ],
+    "automock": false,
+    "setupFiles": [
+      "./test/setupJest.js"
+    ]
+  }
+}
