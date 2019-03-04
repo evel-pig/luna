@@ -82,9 +82,15 @@ export default class App {
         }
       }
     });
+    const newReducers = {};
+    Object.keys(reducers).forEach(key => {
+      if (reducers[key]) {
+        newReducers[key] = reducers[key];
+      }
+    });
     this._reducers = {
       ...this._reducers,
-      ...reducers,
+      ...newReducers,
     };
     let reducer = null;
     if (this._persistor) {
@@ -116,5 +122,9 @@ export default class App {
     if (this._persistor) {
       this._persistor.persist();
     }
+  }
+
+  currentReducers() {
+    return this._reducers;
   }
 }

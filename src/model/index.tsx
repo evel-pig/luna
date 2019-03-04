@@ -58,7 +58,7 @@ export interface ModelOptions<S extends SimpleActionConfigs<S>, A extends ApiAct
     restApi?: RestApiActionConfigs<RA>;
   };
   // tslint:disable-next-line:max-line-length
-  reducer: (options: ReducerOptions<S, A, RA>) => any;
+  reducer?: (options: ReducerOptions<S, A, RA>) => any;
   sagas?: (model: Model<S, A, RA>) => any[];
   basePath?: ApiBasePath;
 }

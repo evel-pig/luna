@@ -36,11 +36,16 @@ export default function connect<OwnProps = any>(mapStateToProps) {
       let props = {};
       if (newPropState) {
         Object.keys(newPropState).forEach(propsName => {
+          const currentState = state[newPropState[propsName]];
+          let injectState = {};
+          if (currentState) {
+            injectState = {
+              [propsName]: currentState,
+            };
+          }
           props = {
             ...props,
-            ...{
-              [propsName]: state[newPropState[propsName]],
-            },
+            ...injectState,
             ...injectActions,
           };
         });

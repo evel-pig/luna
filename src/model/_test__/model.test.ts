@@ -164,4 +164,32 @@ describe('model', () => {
 
     app.store.dispatch(testModel.actions.api.getAge({}));
   });
+
+  it('reducer is null', () => {
+    const testModel = createModel({
+      modelName: 'testModel',
+      sagas: () => [],
+    });
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        requestErrorHandle: (res) => {
+          if (res.payload.res.code !== 200) {
+            return {
+              code: res.payload.res.code,
+            };
+          }
+          return null;
+        },
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    app.model({ test: testModel.reducer }, { test: [
+      ...testModel.sagas,
+    ] });
+  });
 });
