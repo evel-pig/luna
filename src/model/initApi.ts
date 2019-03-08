@@ -94,7 +94,7 @@ export const API_REQUEST_COMPLETE_ACTIONNAME = 'API_REQUEST_COMPLETE';
 export type ApiBasePath = string | (() => string);
 
 export function initApi<T extends ApiActionConfigs<T>>(
-basePath: ApiBasePath, configs: T, modelName: string): Api<T> {
+  basePath: ApiBasePath, configs: T, modelName: string): Api<T> {
   function makeEffect(api: ApiConfig, request: any, actionNames: ApiActionNames) {
     return function* (req) {
       const payload = req.payload || {};
@@ -200,7 +200,7 @@ function getApiPath(apiPath) {
   return typeof apiPath === 'function' ? apiPath() : apiPath;
 }
 
-const reg = new RegExp(/:\w+/);
+const reg = new RegExp(/\/:\w+/);
 
 function makeRequest(basePath: ApiBasePath, api: ApiConfig) {
   return async (data) => {
@@ -220,7 +220,7 @@ function makeRequest(basePath: ApiBasePath, api: ApiConfig) {
       method: method,
     };
     // 匹配path中含有":"开头的路径
-    let pathKey = path.match(reg) && path.match(reg)[0].slice(1);
+    let pathKey = path.match(reg) && path.match(reg)[0].slice(2);
     if (pathKey) {
       let pathId = data && data[pathKey];
       if (pathId !== null && pathId !== undefined) {
