@@ -224,7 +224,7 @@ function makeRequest(basePath: ApiBasePath, api: ApiConfig) {
     if (pathKey) {
       let pathId = data && data[pathKey];
       if (pathId !== null && pathId !== undefined) {
-        uri = uri.replace(reg, pathId);
+        uri = uri.replace(reg, '/' + pathId);
         delete data[pathKey]; // 把对应的id取出来拼接到了uri,删除原始数据中的id;
       } else {
         console.error(`请检查传递参数是否缺少${pathKey}`);
