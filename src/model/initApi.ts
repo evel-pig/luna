@@ -97,13 +97,14 @@ export function initApi<T extends ApiActionConfigs<T>>(
 basePath: ApiBasePath, configs: T, modelName: string): Api<T> {
   function makeEffect(api: ApiConfig, request: any, actionNames: ApiActionNames) {
     return function* (req) {
-      const { except, ...others } = req.payload;
+      const payload = req.payload || {};
+      const { except, ...others } = payload;
       try {
         const response = yield call(request, others);
         yield call(checkAutoLoading, api, 'end');
         yield put(createAction<any>(API_REQUEST_COMPLETE_ACTIONNAME)({
           actionNames: actionNames,
-          req: req.payload,
+          req: payload,
           res: response,
           apiConfig: api,
         }));
@@ -115,7 +116,7 @@ basePath: ApiBasePath, configs: T, modelName: string): Api<T> {
         yield call(checkAutoLoading, api, 'end');
         yield put(createAction<any>(API_REQUEST_COMPLETE_ACTIONNAME)({
           actionNames: actionNames,
-          req: req.payload,
+          req: payload,
           error: error,
           except: Object.assign({}, except),
         }));

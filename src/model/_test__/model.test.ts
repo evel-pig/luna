@@ -192,4 +192,34 @@ describe('model', () => {
       ...testModel.sagas,
     ] });
   });
+
+  it('dispatch api action with none parameters', done => {
+    const testModel = getModel();
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    const testReducer = (state, action) => {
+      const newState = testModel.reducer(state, action);
+
+      if (action.type === testModel.actionNames.api.getAge.success) {
+        expect(action.payload.req).toEqual({});
+        done();
+      }
+
+      return newState;
+    };
+
+    app.model({ test: testReducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+
+    app.store.dispatch(testModel.actions.api.getAge());
+  });
 });
