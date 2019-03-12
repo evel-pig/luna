@@ -9,7 +9,7 @@ getAutoLoadingActionNames,
 ApiBasePath} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
 import { ActionsType } from './util';
-export { setRequestHeaders } from './initApi';
+export { setRequestHeaders, isApiAction } from './initApi';
 import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, RestAction } from './restApi';
 
 let basePath: ApiBasePath = '';
