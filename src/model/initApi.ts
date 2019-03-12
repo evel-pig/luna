@@ -320,3 +320,23 @@ export function createRequestCompleteSaga(errorHandle, processRes) {
     }
   };
 }
+
+export const apiReg = {
+  api: /^api-/,
+  request: /_request$/,
+  error: /_error$/,
+  success: /_success$/,
+};
+
+function isRequestSuccessAction(action) {
+  return apiReg.api.test(action.type) && apiReg.success.test(action.type);
+}
+
+function isRequestErrorAction(action) {
+  return apiReg.api.test(action.type) && apiReg.error.test(action.type);
+}
+
+export const isApiAction = {
+  isErrorAction: isRequestErrorAction,
+  isSuccessAction: isRequestSuccessAction,
+};
