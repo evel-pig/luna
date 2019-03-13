@@ -5,12 +5,12 @@ setMessageObj,
 ApiActionNames,
 Api,
 defaultProcessRes,
-getAutoLoadingActionNames,
-ApiBasePath} from './initApi';
+ApiBasePath, isLoadingAction} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
 import { ActionsType } from './util';
-export { setRequestHeaders, isApiAction } from './initApi';
+export { setRequestHeaders, isApiAction, LOADING_SUFFIX, isLoadingAction } from './initApi';
 import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, RestAction } from './restApi';
+import { CreateShowLoadingOptions, createShowLoadingMiddleware } from './middlewares';
 
 let basePath: ApiBasePath = '';
 
@@ -129,17 +129,17 @@ export default function createModel<S extends SimpleActionConfigs<S>, A extends 
       createReducer: handleActionsCore,
     });
     model.reducer = (state, action) => {
-      const autoLoadingActionNames = getAutoLoadingActionNames(options.modelName);
-      if (action.type === autoLoadingActionNames.start) {
+      const isAutoLoading = action.payload && action.payload.autoLoading;
+      if (isLoadingAction.start(action) && isAutoLoading) {
         return {
           ...state,
-          [action.payload.loading]: true,
+          [action.payload.autoLoading]: true,
         };
       }
-      if (action.type === autoLoadingActionNames.end) {
+      if (isLoadingAction.end(action) && isAutoLoading) {
         return {
           ...state,
-          [action.payload.loading]: false,
+          [action.payload.autoLoading]: false,
         };
       }
       return reducer(state, action);
@@ -174,6 +174,10 @@ export interface ConfigureModelOptions {
    * 加工返回内容
    */
   processRes?: (res) => void;
+  /**
+   * 配置loading
+   */
+  showLoadingOption?: CreateShowLoadingOptions;
 }
 
 export function configureModel(options: ConfigureModelOptions = {}) {
@@ -190,9 +194,15 @@ export function configureModel(options: ConfigureModelOptions = {}) {
 
   basePath = options.basePath;
 
+  let middlewares = [];
+  if (options.showLoadingOption) {
+    middlewares.push(createShowLoadingMiddleware(options.showLoadingOption));
+  }
+
   return {
     sagas: {
       luna: sagas,
     },
+    middlewares,
   };
 }
