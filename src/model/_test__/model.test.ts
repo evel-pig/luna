@@ -1,5 +1,6 @@
 import createModel from '../index';
 import App from '../../app';
+import { ApiConfig } from '../initApi';
 
 declare const fetch: any;
 
@@ -11,7 +12,7 @@ interface TestModelState {
   error: boolean;
 }
 
-function getModel() {
+function getModel(getAgeApiConfig: Partial<ApiConfig> = {}) {
   const restApiConfigs = {
     users: {
       path: 'users',
@@ -31,6 +32,7 @@ function getModel() {
         getAge: {
           path: 'getAge',
           autoLoading: true,
+          ...getAgeApiConfig,
         },
       },
       restApi: restApiConfigs,
@@ -221,5 +223,67 @@ describe('model', () => {
     fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
 
     app.store.dispatch(testModel.actions.api.getAge());
+  });
+
+  it('set model showLoading true', (done) => {
+    const testModel = getModel({
+      showLoading: true,
+    });
+
+    const handleStart = jest.fn();
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        showLoadingOption: {
+          onStart: handleStart,
+          onEnd: (showLoading) => {
+            expect(showLoading).toBe(true);
+            done();
+          },
+        },
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    app.model({ test: testModel.reducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+
+    app.store.dispatch(testModel.actions.api.getAge());
+
+    expect(handleStart).toBeCalledWith(true);
+  });
+
+  it('set model showLoading false', () => {
+    const testModel = getModel({
+      showLoading: false,
+    });
+
+    const handleStart = jest.fn();
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        showLoadingOption: {
+          onStart: handleStart,
+          onEnd: (showLoading) => {
+          },
+        },
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    app.model({ test: testModel.reducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+
+    app.store.dispatch(testModel.actions.api.getAge());
+
+    expect(handleStart).toHaveBeenCalledTimes(0);
   });
 });

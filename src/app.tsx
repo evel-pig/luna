@@ -41,12 +41,15 @@ export default class App {
   private _render: () => React.ReactNode;
 
   constructor(options: AppOptions) {
-    let storeOptions = options.store || {};
+    let storeOptions = options.store || {
+      middlewares: [],
+    };
     const persistConfig = {
       ...(options.persistConfig || {}),
     };
-    const { store, persistor } = configureStore({}, persistConfig, storeOptions);
     const model = configureModel(options.model);
+    storeOptions.middlewares = model.middlewares.concat(storeOptions.middlewares);
+    const { store, persistor } = configureStore({}, persistConfig, storeOptions);
     this.store = store;
     this._persistor = persistor;
     this._reducers = {};

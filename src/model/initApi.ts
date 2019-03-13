@@ -11,6 +11,8 @@ export interface Redirect {
 
 export type AutoLoading = boolean | string;
 
+export type ShowLoading = boolean | string;
+
 export interface ApiConfig {
   /**
    * path (also use as action name)
@@ -53,6 +55,10 @@ export interface ApiConfig {
    * api请求自动改变loading状态，默认为 false
    */
   autoLoading?: AutoLoading;
+  /**
+   * api请求时是否显示loading组件，默认为false
+   */
+  showLoading?: ShowLoading;
 }
 
 export type ApiActionConfigs<T = any> = BaseActionTypeConfigs<T, ApiConfig>;
@@ -82,10 +88,27 @@ export function setRequestHeaders(headers) {
   requestHeaders = headers;
 }
 
+const START_LOADING_SUFFIX = '-startLoading';
+const END_LOADING_SUFFIX = '-endLoading';
+
+export const LOADING_SUFFIX = {
+  start: START_LOADING_SUFFIX,
+  end: END_LOADING_SUFFIX,
+};
+
+export const isLoadingAction = {
+  start: (action) => {
+    return new RegExp(`${START_LOADING_SUFFIX}$`).test(action.type);
+  },
+  end: (action) => {
+    return new RegExp(`${END_LOADING_SUFFIX}$`).test(action.type);
+  },
+};
+
 export function getAutoLoadingActionNames(modelName) {
   return {
-    start: `${modelName}-startLoading`,
-    end: `${modelName}-endLoading`,
+    start: `${modelName}${START_LOADING_SUFFIX}`,
+    end: `${modelName}${END_LOADING_SUFFIX}`,
   };
 }
 
@@ -101,7 +124,7 @@ export function initApi<T extends ApiActionConfigs<T>>(
       const { except, ...others } = payload;
       try {
         const response = yield call(request, others);
-        yield call(checkAutoLoading, api, 'end');
+        yield call(checkLoading, api, 'end');
         yield put(createAction<any>(API_REQUEST_COMPLETE_ACTIONNAME)({
           actionNames: actionNames,
           req: payload,
@@ -113,7 +136,7 @@ export function initApi<T extends ApiActionConfigs<T>>(
         console.error(`request ${getApiPath(api.path)} 错误`);
         console.error(`request params`, req.payload);
         console.error(`message`, error);
-        yield call(checkAutoLoading, api, 'end');
+        yield call(checkLoading, api, 'end');
         yield put(createAction<any>(API_REQUEST_COMPLETE_ACTIONNAME)({
           actionNames: actionNames,
           req: payload,
@@ -124,12 +147,13 @@ export function initApi<T extends ApiActionConfigs<T>>(
     };
   }
 
-  function* checkAutoLoading(api: ApiConfig, loadingType: 'start' | 'end') {
-    if (isAutoLoading(api.autoLoading)) {
+  function* checkLoading(api: ApiConfig, loadingType: 'start' | 'end') {
+    if (api.autoLoading || api.showLoading) {
       yield put({
         type: getAutoLoadingActionNames(modelName)[loadingType],
         payload: {
-          loading: typeof api.autoLoading === 'string' ? api.autoLoading : 'loading',
+          autoLoading: typeof api.autoLoading === 'string' ? api.autoLoading : 'loading',
+          showLoading: api.showLoading,
         },
       });
     }
@@ -141,7 +165,7 @@ export function initApi<T extends ApiActionConfigs<T>>(
         function* () {
           while (true) {
             const req = yield take(actionNames.request);
-            yield call(checkAutoLoading, api, 'start');
+            yield call(checkLoading, api, 'start');
             yield fork(apiSaga, req);
           }
         },
@@ -150,7 +174,7 @@ export function initApi<T extends ApiActionConfigs<T>>(
       return [function* () {
         while (true) {
           const req = yield take(actionNames.request);
-          yield call(checkAutoLoading, api, 'start');
+          yield call(checkLoading, api, 'start');
           yield call(apiSaga, req);
         }
       }];
@@ -180,10 +204,6 @@ export function initApi<T extends ApiActionConfigs<T>>(
     apiActions,
     sagas,
   };
-}
-
-function isAutoLoading(autoLoading: AutoLoading) {
-  return autoLoading === true || typeof autoLoading === 'string';
 }
 
 function getMethod(api: ApiConfig) {
