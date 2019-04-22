@@ -62,6 +62,7 @@ export default class App {
       return persistConfig.wrapperLoadingComponent || null;
     });
 
+    window['store'] = this.store;
     window['inejctAppModel'] = this.model.bind(this);
   }
 
