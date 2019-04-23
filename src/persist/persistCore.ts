@@ -33,7 +33,7 @@ export default class PersisitCore {
   constructor(config: PersistCoreConfig) {
     this.storageKey = `luna-persist:${config.key}`;
     this._whiteList = config.whiteList;
-    this._transforms = config.transforms;
+    this._transforms = config.transforms || [];
     this._lastState = {};
     this._timeIterator = null;
     this._processKeys = [];
