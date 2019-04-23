@@ -12,7 +12,7 @@ interface TestModelState {
   error: boolean;
 }
 
-function getModel(getAgeApiConfig: Partial<ApiConfig> = {}) {
+function getModel(getAgeApiConfig: Partial<ApiConfig> = {}, modelName = 'test') {
   const restApiConfigs = {
     users: {
       path: 'users',
@@ -20,7 +20,7 @@ function getModel(getAgeApiConfig: Partial<ApiConfig> = {}) {
   };
 
   const testModel = createModel({
-    modelName: 'test',
+    modelName: modelName,
     action: {
       simple: {
         add: 'add',
@@ -97,6 +97,7 @@ describe('model', () => {
 
   it('dispatch api success action and set autoLoading', done => {
     const testModel = getModel();
+    const ageModel = getModel({}, 'age');
 
     const app = new App({
       model: {
@@ -119,13 +120,15 @@ describe('model', () => {
       return newState;
     };
 
-    app.model({ test: testReducer }, { test: testModel.sagas });
+    app.model({ test: testReducer, age: ageModel.reducer }, { test: testModel.sagas, age: ageModel.sagas });
 
     fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
 
     app.store.dispatch(testModel.actions.api.getAge({}));
 
     expect(app.store.getState().test.loading).toEqual(true);
+
+    expect(app.store.getState().age.loading).toEqual(false);
   });
 
   it('dispatch api error action', done => {

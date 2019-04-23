@@ -5,7 +5,7 @@ setMessageObj,
 ApiActionNames,
 Api,
 defaultProcessRes,
-ApiBasePath, isLoadingAction} from './initApi';
+ApiBasePath, getAutoLoadingActionNames} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
 import { ActionsType } from './util';
 export { setRequestHeaders, isApiAction, LOADING_SUFFIX, isLoadingAction } from './initApi';
@@ -130,13 +130,14 @@ export default function createModel<S extends SimpleActionConfigs<S>, A extends 
     });
     model.reducer = (state, action) => {
       const isAutoLoading = action.payload && action.payload.autoLoading;
-      if (isLoadingAction.start(action) && isAutoLoading) {
+      const autoLoadingActionNames = getAutoLoadingActionNames(options.modelName);
+      if (autoLoadingActionNames.start === action.type && isAutoLoading) {
         return {
           ...state,
           [action.payload.autoLoading]: true,
         };
       }
-      if (isLoadingAction.end(action) && isAutoLoading) {
+      if (autoLoadingActionNames.end === action.type && isAutoLoading) {
         return {
           ...state,
           [action.payload.autoLoading]: false,
