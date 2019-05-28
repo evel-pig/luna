@@ -289,4 +289,62 @@ describe('model', () => {
 
     expect(handleStart).toHaveBeenCalledTimes(0);
   });
+
+  it('rest autoLoading and showLoading', done => {
+    const testModel = createModel({
+      modelName: 'test',
+      action: {
+        restApi: {
+          users: {
+            path: '/users',
+            autoLoading: true,
+            showLoading: true,
+          },
+        },
+      },
+      reducer: ({ createReducer }) => {
+        return createReducer({}, {
+          loading: false,
+        });
+      },
+    });
+
+    const handleStart = jest.fn();
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        showLoadingOption: {
+          onStart: handleStart,
+          onEnd: (showLoading) => {
+          },
+        },
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    const testReducer = (state, action) => {
+      const newState = testModel.reducer(state, action);
+
+      if (action.type === testModel.actionNames.restApi.users.index.success) {
+        expect(state.loading).toEqual(false);
+        // 通过执行 done 来判断是否触发了制定的 action
+        done();
+      }
+
+      return newState;
+    };
+
+    app.model({ test: testReducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+
+    app.store.dispatch(testModel.actions.restApi.users.index({}));
+
+    expect(app.store.getState().test.loading).toEqual(true);
+
+    expect(handleStart).toBeCalledWith(true);
+  });
 });

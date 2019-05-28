@@ -1,4 +1,4 @@
-import { ApiActionNames, initApi, ApiConfig } from './initApi';
+import { ApiActionNames, initApi, ApiConfig, AutoLoading, ShowLoading } from './initApi';
 import { BaseActionTypeConfigs } from './util';
 
 export interface RestApiConfig {
@@ -23,6 +23,14 @@ export interface RestApiConfig {
    * destory请求ApiConfig
    */
   destoryConfig?: Partial<ApiConfig>;
+    /**
+   * api请求自动改变loading状态，默认为 false
+   */
+  autoLoading?: AutoLoading;
+  /**
+   * api请求时是否显示loading组件，默认为false
+   */
+  showLoading?: ShowLoading;
 }
 
 export interface RestApiMethod<T> {
@@ -52,9 +60,11 @@ export interface RestApi<T> {
 }
 
 function createApiConfig(
+globalConfig: Partial<ApiConfig>,
 config: RestApiConfig, actionName, childConfigkey: string, method: string, pathKey?: string) {
   return {
     [actionName]: {
+      ...globalConfig,
       ...(config[childConfigkey] || {}),
       path: pathKey ? `${config.path}/:${pathKey}` : config.path,
       method: method,
@@ -80,13 +90,20 @@ export default function createRestApi<T extends RestApiActionConfigs<T>>(basePat
     const createActionName = getActionName(key, 'create');
     const updateActionName = getActionName(key, 'update');
     const destoryActionName = getActionName(key, 'delete');
-    const indexApi = initApi(basePath, createApiConfig(item, indexActionName, 'indexConfig', 'GET'), modelName);
-    const showApi = initApi(basePath, createApiConfig(item, showActionName, 'showConfig', 'GET', 'id'), modelName);
-    const createApi = initApi(basePath, createApiConfig(item, createActionName, 'createConfig', 'POST'), modelName);
+    const globalApiConfig = {
+      autoLoading: item.autoLoading,
+      showLoading: item.showLoading,
+    };
+    const indexApi = initApi(basePath, createApiConfig(
+      globalApiConfig, item, indexActionName, 'indexConfig', 'GET'), modelName);
+    const showApi = initApi(basePath, createApiConfig(
+      globalApiConfig, item, showActionName, 'showConfig', 'GET', 'id'), modelName);
+    const createApi = initApi(basePath, createApiConfig(
+      globalApiConfig, item, createActionName, 'createConfig', 'POST'), modelName);
     const updateApi = initApi(basePath, createApiConfig(
-      item, updateActionName, 'updateConfig', 'PUT', 'id'), modelName);
+      globalApiConfig, item, updateActionName, 'updateConfig', 'PUT', 'id'), modelName);
     const destoryApi = initApi(basePath, createApiConfig(
-      item, destoryActionName, 'destoryConfig', 'DELETE', 'id'), modelName);
+      globalApiConfig, item, destoryActionName, 'destoryConfig', 'DELETE', 'id'), modelName);
     apiAction = {
       index: indexApi.apiActions[indexActionName],
       show: showApi.apiActions[showActionName],
