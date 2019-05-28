@@ -5,11 +5,12 @@ setMessageObj,
 ApiActionNames,
 Api,
 defaultProcessRes,
-ApiBasePath, getAutoLoadingActionNames} from './initApi';
+ApiBasePath, getAutoLoadingActionNames, ApiConfig} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
-import { ActionsType } from './util';
+import { ActionsType, BaseActionTypeConfigs } from './util';
 export { setRequestHeaders, isApiAction, LOADING_SUFFIX, isLoadingAction } from './initApi';
-import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, RestAction } from './restApi';
+import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, RestAction
+, RestApiConfig } from './restApi';
 import { CreateShowLoadingOptions, createShowLoadingMiddleware } from './middlewares';
 
 let basePath: ApiBasePath = '';
@@ -75,8 +76,8 @@ export interface Model<T, ApiT, RestApiT> {
 export default function createModel<S extends SimpleActionConfigs<S>, A extends ApiActionConfigs<A>, RA extends RestApiActionConfigs<RA>>(
   options: ModelOptions<S, A, RA>): Model<S, A, RA> {
   let simpleActions = null;
-  let api: Api<A> = null;
-  let restApi: RestApi<RA> = null;
+  let api: Api<BaseActionTypeConfigs<A, ApiConfig>> = null;
+  let restApi: RestApi<BaseActionTypeConfigs<RA, RestApiConfig>> = null;
   if (options.action) {
     const myBasePath = options.basePath || getBasePath;
     if (options.action.simple) {
