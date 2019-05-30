@@ -31,6 +31,10 @@ export interface RestApiConfig {
    * api请求时是否显示loading组件，默认为false
    */
   showLoading?: ShowLoading;
+  /**
+   * 请求路径的id标示
+   */
+  pathKey?: string;
 }
 
 export interface RestApiMethod<T> {
@@ -94,16 +98,17 @@ export default function createRestApi<T extends RestApiActionConfigs<T>>(basePat
       autoLoading: item.autoLoading,
       showLoading: item.showLoading,
     };
+    const pathKey = item.pathKey || 'id';
     const indexApi = initApi(basePath, createApiConfig(
       globalApiConfig, item, indexActionName, 'indexConfig', 'GET'), modelName);
     const showApi = initApi(basePath, createApiConfig(
-      globalApiConfig, item, showActionName, 'showConfig', 'GET', 'id'), modelName);
+      globalApiConfig, item, showActionName, 'showConfig', 'GET', pathKey), modelName);
     const createApi = initApi(basePath, createApiConfig(
       globalApiConfig, item, createActionName, 'createConfig', 'POST'), modelName);
     const updateApi = initApi(basePath, createApiConfig(
-      globalApiConfig, item, updateActionName, 'updateConfig', 'PUT', 'id'), modelName);
+      globalApiConfig, item, updateActionName, 'updateConfig', 'PUT', pathKey), modelName);
     const destoryApi = initApi(basePath, createApiConfig(
-      globalApiConfig, item, destoryActionName, 'destoryConfig', 'DELETE', 'id'), modelName);
+      globalApiConfig, item, destoryActionName, 'destoryConfig', 'DELETE', pathKey), modelName);
     apiAction = {
       index: indexApi.apiActions[indexActionName],
       show: showApi.apiActions[showActionName],
