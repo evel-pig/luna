@@ -290,7 +290,7 @@ describe('model', () => {
     expect(handleStart).toHaveBeenCalledTimes(0);
   });
 
-  it('rest autoLoading and showLoading', done => {
+  it('rest api autoLoading and showLoading', done => {
     const testModel = createModel({
       modelName: 'test',
       action: {
@@ -346,5 +346,112 @@ describe('model', () => {
     expect(app.store.getState().test.loading).toEqual(true);
 
     expect(handleStart).toBeCalledWith(true);
+  });
+
+  it('model global autoLoading', done => {
+    const testModel = createModel({
+      modelName: 'test',
+      action: {
+        api: {
+          users: {
+            path: '/users',
+          },
+        },
+      },
+      reducer: ({ createReducer }) => {
+        return createReducer({}, {
+          loading: false,
+        });
+      },
+    });
+
+    const restApiModel = createModel({
+      modelName: 'restApi',
+      action: {
+        restApi: {
+          books: {
+            path: '/books',
+          },
+        },
+      },
+      reducer: ({ createReducer }) => {
+        return createReducer({}, {
+          loading: false,
+        });
+      },
+    });
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        autoLoading: 'loading',
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    const testReducer = (state, action) => {
+      const newState = testModel.reducer(state, action);
+
+      if (action.type === testModel.actionNames.api.users.success) {
+        expect(state.loading).toEqual(false);
+        // 通过执行 done 来判断是否触发了制定的 action
+        done();
+      }
+
+      return newState;
+    };
+
+    app.model(
+      { test: testReducer, restApi: restApiModel.reducer },
+      { test: testModel.sagas, restApi: restApiModel.sagas },
+    );
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+    app.store.dispatch(testModel.actions.api.users({}));
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+    app.store.dispatch(restApiModel.actions.restApi.books.index({}));
+
+    expect(app.store.getState().test.loading).toEqual(true);
+    expect(app.store.getState().restApi.loading).toEqual(true);
+  });
+
+  it('model autoLoading cover global autoLoading', () => {
+    const testModel = createModel({
+      modelName: 'test',
+      action: {
+        api: {
+          users: {
+            path: '/users',
+            autoLoading: false,
+          },
+        },
+      },
+      reducer: ({ createReducer }) => {
+        return createReducer({}, {
+          loading: false,
+        });
+      },
+    });
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        autoLoading: 'loading',
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    app.model({ test: testModel.reducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ age: 30 }));
+
+    app.store.dispatch(testModel.actions.api.users({}));
+
+    expect(app.store.getState().test.loading).toEqual(false);
   });
 });

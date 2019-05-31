@@ -116,8 +116,13 @@ export const API_REQUEST_COMPLETE_ACTIONNAME = 'API_REQUEST_COMPLETE';
 
 export type ApiBasePath = string | (() => string);
 
+export interface ApiGlobalConfig {
+  basePath: ApiBasePath;
+  autoLoading?: () => AutoLoading;
+}
+
 export function initApi<T extends ApiActionConfigs<T>>(
-  basePath: ApiBasePath, configs: T, modelName: string): Api<T> {
+  globalConfig: ApiGlobalConfig, configs: T, modelName: string): Api<T> {
   function makeEffect(api: ApiConfig, request: any, actionNames: ApiActionNames) {
     return function* (req) {
       const payload = req.payload || {};
@@ -148,11 +153,18 @@ export function initApi<T extends ApiActionConfigs<T>>(
   }
 
   function* checkLoading(api: ApiConfig, loadingType: 'start' | 'end') {
-    if (api.autoLoading || api.showLoading) {
+    let autoLoading: AutoLoading = false;
+    if (globalConfig.autoLoading) {
+      autoLoading = globalConfig.autoLoading();
+    }
+    if (api.autoLoading !== null && typeof api.autoLoading !== 'undefined') {
+      autoLoading = api.autoLoading;
+    }
+    if (autoLoading || api.showLoading) {
       yield put({
         type: getAutoLoadingActionNames(modelName)[loadingType],
         payload: {
-          autoLoading: typeof api.autoLoading === 'string' ? api.autoLoading : 'loading',
+          autoLoading: typeof autoLoading === 'string' ? autoLoading : 'loading',
           showLoading: api.showLoading,
         },
       });
@@ -191,7 +203,7 @@ export function initApi<T extends ApiActionConfigs<T>>(
     let actionNames = makeActionNames(finalModelName, config, key);
     apiActionNames[truePath] = actionNames;
     apiActions[truePath] = createAction(actionNames.request);
-    let request = makeRequest(basePath, config);
+    let request = makeRequest(globalConfig.basePath, config);
     let effect = makeEffect(config, request, actionNames);
     if (config.customSaga) {
       return;

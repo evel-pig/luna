@@ -5,7 +5,7 @@ setMessageObj,
 ApiActionNames,
 Api,
 defaultProcessRes,
-ApiBasePath, getAutoLoadingActionNames, ApiConfig} from './initApi';
+ApiBasePath, getAutoLoadingActionNames, ApiConfig, AutoLoading} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
 import { ActionsType, BaseActionTypeConfigs } from './util';
 export { setRequestHeaders, isApiAction, LOADING_SUFFIX, isLoadingAction } from './initApi';
@@ -14,6 +14,12 @@ import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, R
 import { CreateShowLoadingOptions, createShowLoadingMiddleware } from './middlewares';
 
 let basePath: ApiBasePath = '';
+
+let _globalAutoLoading: AutoLoading = false;
+
+function getGlobalAutoLoading() {
+  return _globalAutoLoading;
+}
 
 function getBasePath() {
   if (typeof basePath === 'string') {
@@ -84,10 +90,16 @@ export default function createModel<S extends SimpleActionConfigs<S>, A extends 
       simpleActions = initAction(options.action.simple, options.modelName);
     }
     if (options.action.api) {
-      api = initApi(myBasePath, options.action.api, options.modelName);
+      api = initApi({
+        basePath: myBasePath,
+        autoLoading: getGlobalAutoLoading,
+      }, options.action.api, options.modelName);
     }
     if (options.action.restApi) {
-      restApi = createRestApi(myBasePath, options.action.restApi, options.modelName);
+      restApi = createRestApi({
+        basePath: myBasePath,
+        autoLoading: getGlobalAutoLoading,
+      }, options.action.restApi, options.modelName);
     }
   }
 
@@ -180,6 +192,10 @@ export interface ConfigureModelOptions {
    * 配置loading
    */
   showLoadingOption?: CreateShowLoadingOptions;
+  /**
+   * 全局设置 autoLoading
+   */
+  autoLoading?: AutoLoading;
 }
 
 export function configureModel(options: ConfigureModelOptions = {}) {
@@ -195,6 +211,7 @@ export function configureModel(options: ConfigureModelOptions = {}) {
   setMessageObj(options.message);
 
   basePath = options.basePath;
+  _globalAutoLoading = options.autoLoading;
 
   let middlewares = [];
   if (options.showLoadingOption) {
