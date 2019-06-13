@@ -47,6 +47,7 @@
     "@types/node": "^8.5.2",
     "@types/react": "^16.8.5",
     "@types/react-dom": "^16.8.2",
+    "@types/react-redux": "^7.1.0",
     "@types/redux-actions": "^2.3.1",
     "babel-jest": "^22.0.4",
     "enzyme": "^3.3.0",

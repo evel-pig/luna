@@ -88,7 +88,7 @@ export default class App {
     });
     const newReducers = {};
     Object.keys(reducers).forEach(key => {
-      if (reducers[key]) {
+      if (reducers[key] && !this._reducers[key]) {
         newReducers[key] = reducers[key];
       }
     });
@@ -102,9 +102,12 @@ export default class App {
     } else {
       reducer = combineReducers(this._reducers);
     }
-
-    this.store.replaceReducer(reducer);
-    sagaMiddleware.run(generateSagas(loadSagas));
+    if (Object.keys(newReducers).length > 0) {
+      this.store.replaceReducer(reducer);
+    }
+    if (loadSagas.length > 0) {
+      sagaMiddleware.run(generateSagas(loadSagas));
+    }
   }
 
   start(containerId: string) {

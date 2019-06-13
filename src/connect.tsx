@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { connect as rrConnect } from 'react-redux';
 
 export interface NormalComponentProps {
@@ -53,6 +52,6 @@ export default function connect<OwnProps = any>(mapStateToProps) {
       return props;
     };
 
-    return rrConnect(mapState2Props, null, null, { forwardRef: true })(Component) as React.ComponentClass<OwnProps>;
+    return rrConnect<any, any, OwnProps, any, any>(mapState2Props, null, null, { forwardRef: true })(Component);
   };
 }
