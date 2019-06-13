@@ -1,11 +1,10 @@
 import App from '../../app';
 import * as React from 'react';
 import useModel from '../useModel';
+
 import createModel from '../../model';
 
-jest.useFakeTimers();
-
-export interface HomeState {
+export interface CounterState {
   count: number;
 }
 
@@ -18,7 +17,7 @@ const counterModel = createModel({
     api: {},
   },
   reducer: ({ simpleActionNames, createReducer }) => {
-    return createReducer<HomeState>({
+    return createReducer<CounterState>({
       [simpleActionNames.addCount](state, action) {
         return {
           ...state,
@@ -38,7 +37,7 @@ export interface CounterProps {
 }
 
 export default function Counter (props: CounterProps) {
-  const [ counter, dispatch ] = useModel<HomeState, typeof counterModel.actions>('counter');
+  const [ counter, dispatch ] = useModel<CounterState, typeof counterModel.actions>('counter');
   return (
     <div>
       <p id="count">{counter.count}</p>
@@ -56,7 +55,7 @@ describe('useModel', () => {
         <Counter />
       ),
     });
-    app.model({ counter: counterModel.reducer }, { counter: counterModel.sagas });
+    app.loadModel(counterModel);
     const root = document.createElement('div');
     root.id = 'root';
     document.body.appendChild(root);

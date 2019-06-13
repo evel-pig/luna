@@ -110,6 +110,15 @@ export default class App {
     }
   }
 
+  loadModel(model) {
+    let m = model;
+    if (m.default) {
+      m = m.default;
+    }
+    const modelName = m.modelName;
+    this.model({ [modelName]: m.reducer }, { [modelName]: m.sagas });
+  }
+
   start(containerId: string) {
     let render = () => {
       ReactDOM.render(
