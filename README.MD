@@ -99,6 +99,26 @@ export default connect({
 
 ```
 
+### useModel
+
+给组件注入model的Hooks版本
+
+```typescript
+export interface CounterProps {
+}
+
+export default function Counter (props: CounterProps) {
+  const [ home, dispatch, homeActions ] = useModel<HomeState, typeof homeModel.actions>(require('./model'));
+  return (
+    <div>
+      <p>{home.count}</p>
+      <button onClick={() => { dispatch(homeActions.simple.addCount()); }}>add count</button>
+    </div>
+  );
+}
+
+```
+
 ### DynamicComponent
 
 异步加载组件
