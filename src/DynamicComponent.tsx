@@ -13,9 +13,16 @@ export interface DynamicComponentModel {
 
 export interface DynamicComponentProps {
   model: DynamicComponentModel;
+  /**
+   * 是否注入model，默认为true
+   */
+  connectModel?: boolean;
 }
 
 export default class DynamicComponent<T extends DynamicComponentProps> extends React.Component<T, any> {
+  static defaultProps = {
+    connectModel: true,
+  };
   static setDefaultLoadingComponent = (LoadingComponent) => {
     defaultLoadingComponent = LoadingComponent;
   }
@@ -93,8 +100,12 @@ export default class DynamicComponent<T extends DynamicComponentProps> extends R
 
   setAsyncComponent = (AsyncComponent) => {
     if (this.mounted) {
+      let connectModel = this.props.connectModel;
+      if ((this.props.model.models || []).length === 0) {
+        connectModel = false;
+      }
       this.setState({
-        AsyncComponent: connect(this.models)(AsyncComponent),
+        AsyncComponent: connectModel ? connect(this.models)(AsyncComponent) : AsyncComponent,
       });
     }
   }
@@ -102,7 +113,7 @@ export default class DynamicComponent<T extends DynamicComponentProps> extends R
   render() {
     const { AsyncComponent } = this.state;
     if (AsyncComponent) {
-      const { model, ...rest } = this.props;
+      const { model, connectModel, ...rest } = this.props;
       return (
         <AsyncComponent {...rest} />
       );
