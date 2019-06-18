@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { loadModels } from './dynamic';
+import { loadModels as loadModelsCore } from './dynamic';
 import connect from './connect';
 
-let defaultLoadingComponent = () => null;
+let DefaultLoadingComponent = () => null;
 
 declare const module: any;
 
@@ -19,72 +19,31 @@ export interface DynamicComponentProps {
   connectModel?: boolean;
 }
 
-export default class DynamicComponent<T extends DynamicComponentProps> extends React.Component<T, any> {
-  static defaultProps = {
-    connectModel: true,
-  };
-  static setDefaultLoadingComponent = (LoadingComponent) => {
-    defaultLoadingComponent = LoadingComponent;
-  }
+export default function DynamicComponent<T extends DynamicComponentProps>(props: T) {
+  const [ AsyncComponent, setAsyncComponent ] = React.useState(null);
+  let models = {};
+  const mounted = React.useRef(false);
 
-  LoadingComponent: any;
-  mounted: boolean;
-  models: any;
-
-  constructor(props) {
-    super(props);
-
-    this.LoadingComponent = defaultLoadingComponent;
-    this.mounted = false;
-
-    this.state = {
-      AsyncComponent: null,
-    };
-
-    this.models = {};
-
-    this.load();
-  }
-
-  componentDidMount() {
-    this.mounted = true;
-  }
-
-  componentWillUnmount() {
-    this.mounted = false;
-  }
-
-  componentDidUpdate() {
-    if (module.hot && window['hotReload']) {
-      setImmediate(() => {
-        this.load();
-        window['hotReload'] = false;
-      });
-    }
-
-    return null;
-  }
-
-  load() {
-    this.loadModels().then(() => {
-      this.loadComponent();
+  function load() {
+    loadModels().then(() => {
+      loadComponent();
     });
   }
 
-  loadModels() {
+  function loadModels() {
     return new Promise(resolve => {
-      loadModels((this.props.model.models || [])).then((models: any) => {
-        this.models = models;
+      loadModelsCore((props.model.models || [])).then((data: any) => {
+        models = data;
         resolve();
       });
     });
   }
 
-  loadComponent() {
+  function loadComponent() {
     // 判断是不是动态加载的组件
-    const component = this.props.model.component;
+    const component = props.model.component;
     if (component.toString().indexOf('.then(') < 0) {
-      this.setAsyncComponent(component);
+      setComponent(component);
       return;
     }
     component().then(r => {
@@ -92,34 +51,51 @@ export default class DynamicComponent<T extends DynamicComponentProps> extends R
       if (r.default) {
         c = r.default;
       }
-      this.setAsyncComponent(c);
+      setComponent(c);
     }).catch(err => {
       console.log(err);
     });
   }
 
-  setAsyncComponent = (AsyncComponent) => {
-    if (this.mounted) {
-      let connectModel = this.props.connectModel;
-      if ((this.props.model.models || []).length === 0) {
+  function setComponent(component) {
+    if (mounted.current) {
+      let connectModel = props.connectModel;
+      if ((props.model.models || []).length === 0) {
         connectModel = false;
       }
-      this.setState({
-        AsyncComponent: connectModel ? connect(this.models)(AsyncComponent) : AsyncComponent,
+      setAsyncComponent(() => {
+        return connectModel ? connect(models)(component) : component;
       });
     }
   }
 
-  render() {
-    const { AsyncComponent } = this.state;
-    if (AsyncComponent) {
-      const { model, connectModel, ...rest } = this.props;
-      return (
-        <AsyncComponent {...rest} />
-      );
-    }
+  React.useEffect(() => {
+    load();
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
-    const { LoadingComponent } = this;
-    return <LoadingComponent />;
+  React.useEffect(() => {
+    if (module.hot && window['hotReload']) {
+      setImmediate(() => {
+        load();
+        window['hotReload'] = false;
+      });
+    }
+  });
+
+  if (AsyncComponent) {
+    const { model, connectModel, ...rest } = props;
+    return (
+      <AsyncComponent {...rest} />
+    );
   }
+
+  return <DefaultLoadingComponent />;
 }
+
+DynamicComponent.setDefaultLoadingComponent = (LoadingComponent) => {
+  DefaultLoadingComponent = LoadingComponent;
+};
