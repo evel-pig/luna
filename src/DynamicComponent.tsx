@@ -15,7 +15,7 @@ export interface DynamicComponentProps {
   model: DynamicComponentModel;
 }
 
-export default class DynamicComponent extends React.Component<any, any> {
+export default class DynamicComponent<T extends DynamicComponentProps> extends React.Component<T, any> {
   static setDefaultLoadingComponent = (LoadingComponent) => {
     defaultLoadingComponent = LoadingComponent;
   }
