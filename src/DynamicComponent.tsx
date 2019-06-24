@@ -96,6 +96,6 @@ export default function DynamicComponent<T extends DynamicComponentProps>(props:
   return <DefaultLoadingComponent />;
 }
 
-DynamicComponent.setDefaultLoadingComponent = (LoadingComponent) => {
+export const setDefaultLoadingComponent = (LoadingComponent) => {
   DefaultLoadingComponent = LoadingComponent;
 };
