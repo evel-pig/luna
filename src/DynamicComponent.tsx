@@ -59,7 +59,7 @@ export default function DynamicComponent<T extends DynamicComponentProps>(props:
 
   function setComponent(component) {
     if (mounted.current) {
-      let connectModel = props.connectModel;
+      let connectModel = props.connectModel || true;
       if ((props.model.models || []).length === 0) {
         connectModel = false;
       }
