@@ -108,7 +108,7 @@ export interface CounterProps {
 }
 
 export default function Counter (props: CounterProps) {
-  const [ home, dispatch, homeActions ] = useModel<HomeState, typeof homeModel.actions>(require('./model'));
+  const [ home, homeActions, dispatch ] = useModel<HomeState, typeof homeModel.actions>(require('./model'));
   return (
     <div>
       <p>{home.count}</p>
