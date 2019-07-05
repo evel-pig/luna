@@ -37,11 +37,11 @@ export interface CounterProps {
 }
 
 export default function Counter (props: CounterProps) {
-  const [ counter, dispatch ] = useModel<CounterState, typeof counterModel.actions>('counter');
+  const [ counter, actions, dispatch ] = useModel<CounterState, typeof counterModel.actions>(counterModel);
   return (
     <div>
       <p id="count">{counter.count}</p>
-      <button id="addBtn" onClick={() => { dispatch(counterModel.actions.simple.addCount()); }}>add count</button>
+      <button id="addBtn" onClick={() => { dispatch(actions.simple.addCount()); }}>add count</button>
     </div>
   );
 }

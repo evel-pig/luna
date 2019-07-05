@@ -29,5 +29,5 @@ export default function useModel<S = any, A = any>(model: any) {
 
   const dispatch = useDispatch();
 
-  return [s, dispatch, actions] as [S, ReturnType<typeof useDispatch>, A];
+  return [s, actions, dispatch] as [S, A, ReturnType<typeof useDispatch>];
 }
