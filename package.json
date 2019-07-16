@@ -26,6 +26,7 @@
     "DynamicComponent.js",
     "index.js",
     "model.js",
+    "hooks.js",
     "*.d.ts"
   ],
   "repository": {
@@ -43,6 +44,7 @@
   },
   "homepage": "https://github.com/evel-pig/luna#readme",
   "devDependencies": {
+    "@testing-library/react-hooks": "^1.1.0",
     "@types/jest": "^22.0.0",
     "@types/node": "^8.5.2",
     "@types/react": "^16.8.5",
@@ -51,7 +53,7 @@
     "@types/redux-actions": "^2.3.1",
     "babel-jest": "^22.0.4",
     "enzyme": "^3.3.0",
-    "enzyme-adapter-react-16": "^1.1.1",
+    "enzyme-adapter-react-16": "^1.14.0",
     "enzyme-to-json": "^3.3.4",
     "husky": "^0.14.3",
     "identity-obj-proxy": "^3.0.0",
@@ -59,8 +61,8 @@
     "jest-fetch-mock": "^2.1.0",
     "lint-staged": "^7.1.2",
     "npm-run-script": "0.0.4",
-    "react": "^16.8.0",
-    "react-dom": "^16.8.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "rimraf": "^2.6.2",
     "ts-jest": "^22.4.6",
     "tslint": "^5.10.0",
@@ -70,8 +72,8 @@
     "typescript": "^3.0.1"
   },
   "peerDependencies": {
-    "react": ">=16.3.0",
-    "react-dom": ">=16.3.0"
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
   },
   "dependencies": {
     "es6-promise": "^4.2.6",

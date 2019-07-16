@@ -15,7 +15,7 @@ interface TestModelState {
 function getModel(getAgeApiConfig: Partial<ApiConfig> = {}, modelName = 'test') {
   const restApiConfigs = {
     users: {
-      path: 'users',
+      path: '/users',
     },
   };
 
@@ -27,10 +27,10 @@ function getModel(getAgeApiConfig: Partial<ApiConfig> = {}, modelName = 'test') 
       },
       api: {
         getList: {
-          path: 'getList',
+          path: '/getList',
         },
         getAge: {
-          path: 'getAge',
+          path: '/getAge',
           autoLoading: true,
           ...getAgeApiConfig,
         },
@@ -453,5 +453,92 @@ describe('model', () => {
     app.store.dispatch(testModel.actions.api.users({}));
 
     expect(app.store.getState().test.loading).toEqual(false);
+  });
+
+  it('set handleError', (done) => {
+    const testModel = createModel({
+      modelName: 'test',
+      action: {
+        api: {
+          users: {
+            path: '/users',
+            autoLoading: false,
+          },
+        },
+      },
+      reducer: ({ createReducer }) => {
+        return createReducer({}, {
+          loading: false,
+        });
+      },
+    });
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        requestErrorHandle: (res) => {
+          if (res.payload.res.code !== 200) {
+            return res.payload.res;
+          }
+
+          return null;
+        },
+        apiErrorOptions: {
+          handleError: (action) => {
+            expect(action.payload.error.code).toBe(503);
+            done();
+          },
+        },
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    app.model({ test: testModel.reducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ code: 503, age: 30 }));
+
+    app.store.dispatch(testModel.actions.api.users({}));
+  });
+
+  it('show message', done => {
+    const testModel = createModel({
+      modelName: 'test',
+      action: {
+        api: {
+          users: {
+            path: '/users',
+            message: 'get user success',
+          },
+        },
+      },
+      reducer: ({ createReducer }) => {
+        return createReducer({}, {
+          loading: false,
+        });
+      },
+    });
+
+    const app = new App({
+      model: {
+        basePath: '/api',
+        message: {
+          success: (content) => {
+            expect(content).toBe('get user success');
+            done();
+          },
+        },
+      },
+      render: () => {
+        return null;
+      },
+    });
+
+    app.model({ test: testModel.reducer }, { test: testModel.sagas });
+
+    fetch.mockResponseOnce(JSON.stringify({ code: 503, age: 30 }));
+
+    app.store.dispatch(testModel.actions.api.users({}));
   });
 });

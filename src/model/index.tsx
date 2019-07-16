@@ -1,31 +1,23 @@
 import { initAction, ActionNamesType, SimpleActionConfigs } from './initAction';
 import { initApi, ApiActionConfigs, ApiActionNamesType, createRequestCompleteSaga,
-defaultRequestErrorHandle,
-setMessageObj,
 ApiActionNames,
-Api,
-defaultProcessRes,
-ApiBasePath, getAutoLoadingActionNames, ApiConfig, AutoLoading} from './initApi';
+Api, getAutoLoadingActionNames, ApiConfig, AutoLoading} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
 import { ActionsType, BaseActionTypeConfigs } from './util';
-export { setRequestHeaders, isApiAction, LOADING_SUFFIX, isLoadingAction } from './initApi';
+export { isApiAction, LOADING_SUFFIX, isLoadingAction } from './initApi';
 import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, RestAction
 , RestApiConfig } from './restApi';
-import { CreateShowLoadingOptions, createShowLoadingMiddleware } from './middlewares';
-
-let basePath: ApiBasePath = '';
+import { CreateShowLoadingOptions, createShowLoadingMiddleware
+, CreateApiErrorOptions, createApiErrorMiddleware, CreateApiSuccessMiddlewareOptions
+, createApiSuccessMiddleware } from './middlewares';
+import { setBasePath, ApiPath, defaultProcessRes, setMessageObj } from './apiHelper';
+import { configureApi } from '../hooks/useApi/api';
+export { isRequestAction, setRequestHeaders } from './apiHelper';
 
 let _globalAutoLoading: AutoLoading = false;
 
 function getGlobalAutoLoading() {
   return _globalAutoLoading;
-}
-
-function getBasePath() {
-  if (typeof basePath === 'string') {
-    return basePath;
-  }
-  return basePath();
 }
 
 export interface AllActions<T, ApiT, RestApiT> {
@@ -67,7 +59,7 @@ export interface ModelOptions<S extends SimpleActionConfigs<S>, A extends ApiAct
   // tslint:disable-next-line:max-line-length
   reducer?: (options: ReducerOptions<S, A, RA>) => any;
   sagas?: (model: Model<S, A, RA>) => any[];
-  basePath?: ApiBasePath;
+  basePath?: ApiPath;
 }
 
 export interface Model<T, ApiT, RestApiT> {
@@ -85,7 +77,7 @@ export default function createModel<S extends SimpleActionConfigs<S>, A extends 
   let api: Api<BaseActionTypeConfigs<A, ApiConfig>> = null;
   let restApi: RestApi<BaseActionTypeConfigs<RA, RestApiConfig>> = null;
   if (options.action) {
-    const myBasePath = options.basePath || getBasePath;
+    const myBasePath = options.basePath;
     if (options.action.simple) {
       simpleActions = initAction(options.action.simple, options.modelName);
     }
@@ -175,9 +167,9 @@ export interface ConfigureModelOptions {
   /**
    * 代理接口基础路径
    */
-  basePath?: ApiBasePath;
+  basePath?: ApiPath;
   /**
-   * api请求错误处理
+   * api请求错误判断
    */
   requestErrorHandle?: (res) => void;
   /**
@@ -196,13 +188,37 @@ export interface ConfigureModelOptions {
    * 全局设置 autoLoading
    */
   autoLoading?: AutoLoading;
+  /**
+   * api请求错误处理
+   */
+  apiErrorOptions?: CreateApiErrorOptions;
+    /**
+   * api请求成功处理
+   */
+  apiSuccessOptions?: CreateApiSuccessMiddlewareOptions;
 }
 
 export function configureModel(options: ConfigureModelOptions = {}) {
+  const errorHandle = (res) => {
+    if (res.payload.error) {
+      return res.payload.error;
+    }
+
+    if (options.requestErrorHandle) {
+      return options.requestErrorHandle(res);
+    }
+
+    return null;
+  };
+
   const requestCompleteSaga = createRequestCompleteSaga(
-    options.requestErrorHandle || defaultRequestErrorHandle,
+    errorHandle,
     options.processRes || defaultProcessRes,
   );
+  configureApi({
+    errorHandle,
+    processRes: options.processRes,
+  });
 
   const sagas = [
     requestCompleteSaga,
@@ -210,13 +226,15 @@ export function configureModel(options: ConfigureModelOptions = {}) {
 
   setMessageObj(options.message);
 
-  basePath = options.basePath;
+  setBasePath(options.basePath);
   _globalAutoLoading = options.autoLoading;
 
   let middlewares = [];
   if (options.showLoadingOption) {
     middlewares.push(createShowLoadingMiddleware(options.showLoadingOption));
   }
+  middlewares.push(createApiSuccessMiddleware(options.apiSuccessOptions));
+  middlewares.push(createApiErrorMiddleware(options.apiErrorOptions));
 
   return {
     sagas: {

@@ -104,6 +104,8 @@ export default connect({
 给组件注入model的Hooks版本
 
 ```typescript
+import { useModel } from '@dfxk/luna';
+
 export interface CounterProps {
 }
 
@@ -113,6 +115,24 @@ export default function Counter (props: CounterProps) {
     <div>
       <p>{home.count}</p>
       <button onClick={() => { dispatch(homeActions.simple.addCount()); }}>add count</button>
+    </div>
+  );
+}
+
+```
+
+### useApi
+
+网络请求的Hooks版本（会触发model的错误处理）
+
+```typescript
+import { useApi } from '@dfxk/luna';
+
+export default function User (props) {
+  const { data } = useApi<any>({ path: '/getUser', data: { id: props.id } });
+  return (
+    <div>
+      <p>{data.name}</p>
     </div>
   );
 }

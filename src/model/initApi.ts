@@ -1,8 +1,10 @@
 import { createAction } from 'redux-actions';
 import { call, put, take, fork } from 'redux-saga/effects';
 import xFetch from './enhanceFetch';
-import { getQueryString, ActionsType, BaseActionTypeConfigs } from './util';
+import { ActionsType, BaseActionTypeConfigs } from './util';
 import normalActions from './normalActions';
+import { ApiPath, ApiDataMode, getApiOptions, getApiPath, ApiSuccessMessage } from './apiHelper';
+export { setMessageObj } from './apiHelper';
 
 export interface Redirect {
   componentName: string;
@@ -17,7 +19,7 @@ export interface ApiConfig {
   /**
    * path (also use as action name)
    */
-  path: string | (() => string);
+  path: ApiPath;
   /**
    * http method (default: GET)
    */
@@ -25,7 +27,7 @@ export interface ApiConfig {
   /**
    * Determine whether show message when request success
    */
-  message?: boolean | string;
+  message?: ApiSuccessMessage;
   /**
    * Determine whether redirect other route when request success
    */
@@ -45,11 +47,11 @@ export interface ApiConfig {
   /**
    * 强制指定请求参数的位置
    */
-  dataMode?: 'query' | 'body';
+  dataMode?: ApiDataMode;
   /**
    * 指定basePath，覆盖全局的basePath
    */
-  basePath?: ApiBasePath;
+  basePath?: ApiPath;
 
   /**
    * api请求自动改变loading状态，默认为 false
@@ -75,17 +77,6 @@ export interface Api<T> {
   apiActionNames: ApiActionNamesType<T>;
   apiActions: ActionsType<T>;
   sagas: any[];
-}
-
-let message = null;
-let requestHeaders = {};
-
-export function setMessageObj(obj: any) {
-  message = obj;
-}
-
-export function setRequestHeaders(headers) {
-  requestHeaders = headers;
 }
 
 const START_LOADING_SUFFIX = '-startLoading';
@@ -114,10 +105,8 @@ export function getAutoLoadingActionNames(modelName) {
 
 export const API_REQUEST_COMPLETE_ACTIONNAME = 'API_REQUEST_COMPLETE';
 
-export type ApiBasePath = string | (() => string);
-
 export interface ApiGlobalConfig {
-  basePath: ApiBasePath;
+  basePath: ApiPath;
   autoLoading?: () => AutoLoading;
 }
 
@@ -222,64 +211,21 @@ function getMethod(api: ApiConfig) {
   // 默认method是POST
   let method = 'POST';
   if (api.method) {
-    method = api.method;
+    method = api.method.toUpperCase();
   }
 
   return method;
 }
 
-function getApiPath(apiPath) {
-  return typeof apiPath === 'function' ? apiPath() : apiPath;
-}
-
-const reg = new RegExp(/\/:\w+/);
-
-function makeRequest(basePath: ApiBasePath, api: ApiConfig) {
+function makeRequest(basePath: ApiPath, api: ApiConfig) {
   return async (data) => {
-    let trueBasePath = basePath;
-    if (api.basePath) {
-      trueBasePath = api.basePath;
-    }
-    if (typeof basePath === 'function') {
-      trueBasePath = basePath();
-    }
-    const path = getApiPath(api.path);
-    let uri = trueBasePath + path;
-    let method = getMethod(api);
-    let upperCaseMethod = method.toUpperCase();
-    let opts: any = {
-      headers: requestHeaders,
-      method: method,
-    };
-    // 匹配path中含有":"开头的路径
-    let pathKey = path.match(reg) && path.match(reg)[0].slice(2);
-    if (pathKey) {
-      let pathId = data && data[pathKey];
-      if (pathId !== null && pathId !== undefined) {
-        uri = uri.replace(reg, '/' + pathId);
-        delete data[pathKey]; // 把对应的id取出来拼接到了uri,删除原始数据中的id;
-      } else {
-        console.error(`请检查传递参数是否缺少${pathKey}`);
-      }
-    }
-
-    let useQuery = false;
-    if (api.dataMode) {
-      useQuery = api.dataMode === 'query';
-    } else {
-      useQuery = upperCaseMethod === 'GET';
-    }
-    if (useQuery) {
-      let query = getQueryString(data);
-      if (query) {
-        uri += '?' + query;
-      }
-    } else {
-      opts = {
-        ...opts,
-        body: JSON.stringify(data) || null,
-      };
-    }
+    const { uri, opts } = getApiOptions({
+      path: api.path,
+      basePath: api.basePath || basePath,
+      method: api.method,
+      dataMode: api.dataMode,
+      data: data,
+    });
     return await xFetch(uri, opts);
   };
 }
@@ -291,42 +237,6 @@ function makeActionNames(modelName: string, api: ApiConfig, actionName): ApiActi
     success: `${baseActionName}_success`,
     error: `${baseActionName}_error`,
   };
-}
-
-export function defaultRequestErrorHandle(res) {
-  if (res.payload.error) {
-    return res.payload.error;
-  }
-
-  return null;
-}
-
-function handleMessage(apiConfig: ApiConfig) {
-  if (apiConfig.message) {
-    let text = '';
-    if (typeof apiConfig.message === 'string') {
-      text = apiConfig.message;
-    }
-    if (message && text) {
-      message.success(text);
-    }
-  }
-}
-
-function* handleRedirect(apiConfig: ApiConfig) {
-  if (apiConfig.redirect) {
-    handleMessage({
-      ...apiConfig,
-      message: apiConfig.redirect.message,
-    });
-    yield put(normalActions.redirect({
-      componentName: apiConfig.redirect.componentName,
-    }));
-  }
-}
-
-export function defaultProcessRes(res) {
-  return res;
 }
 
 export function createRequestCompleteSaga(errorHandle, processRes) {
@@ -346,8 +256,10 @@ export function createRequestCompleteSaga(errorHandle, processRes) {
           res: processRes(r.payload.res),
         }));
         const apiConfig = r.payload.apiConfig as ApiConfig;
-        yield call(handleRedirect, apiConfig);
-        handleMessage(apiConfig);
+        yield put(normalActions.apiComplete({
+          redirect: apiConfig.redirect,
+          message: apiConfig.message,
+        }));
       }
     }
   };
