@@ -21,12 +21,7 @@
   },
   "files": [
     "lib",
-    "connect.js",
-    "dynamic.js",
-    "DynamicComponent.js",
     "index.js",
-    "model.js",
-    "hooks.js",
     "*.d.ts"
   ],
   "repository": {
