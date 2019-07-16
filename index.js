@@ -5,3 +5,4 @@ module.exports.useModel = require('./lib/hooks/useModel').default;
 module.exports.useApi = require('./lib/hooks/useApi').default;
 module.exports.connect = require('./lib/connect').default;
 module.exports.DynamicComponent = require('./lib/DynamicComponent').default;
+module.exports.createModel = require('./lib/model').default;
