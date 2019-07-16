@@ -54,7 +54,7 @@ export default function useApi<T = any>(
         setData(resData);
         setSuccess(true);
         if (dispatch) {
-          dispatch(normalActions.apiComplete({
+          dispatch(normalActions.apiSuccess({
             message: realOptions.message,
           }));
         }

@@ -3,7 +3,8 @@ import { call, put, take, fork } from 'redux-saga/effects';
 import xFetch from './enhanceFetch';
 import { ActionsType, BaseActionTypeConfigs } from './util';
 import normalActions from './normalActions';
-import { ApiPath, ApiDataMode, getApiOptions, getApiPath, ApiSuccessMessage } from './apiHelper';
+import { ApiPath, ApiDataMode, getApiOptions, getApiPath, ApiSuccessMessage
+, getErrorHandle, getProcessRes } from './apiHelper';
 export { setMessageObj } from './apiHelper';
 
 export interface Redirect {
@@ -112,31 +113,48 @@ export interface ApiGlobalConfig {
 
 export function initApi<T extends ApiActionConfigs<T>>(
   globalConfig: ApiGlobalConfig, configs: T, modelName: string): Api<T> {
+  function* sendError(actionNames: ApiActionNames, payload) {
+    yield put(createAction<any>(actionNames.error)(payload));
+  }
   function makeEffect(api: ApiConfig, request: any, actionNames: ApiActionNames) {
     return function* (req) {
       const payload = req.payload || {};
-      const { except, ...others } = payload;
+      const { except = {}, ...others } = payload;
       try {
         const response = yield call(request, others);
         yield call(checkLoading, api, 'end');
-        yield put(createAction<any>(API_REQUEST_COMPLETE_ACTIONNAME)({
-          actionNames: actionNames,
-          req: payload,
-          res: response,
-          apiConfig: api,
-        }));
+        const error = getErrorHandle()({
+          payload: {
+            res: response,
+          },
+        });
+        if (error) {
+          yield call(sendError, actionNames, {
+            req: payload,
+            error: error,
+            except: Object.assign({}, except),
+          });
+        } else {
+          yield put(createAction<any>(actionNames.success)({
+            req: payload,
+            res: getProcessRes()(response),
+          }));
+          yield put(normalActions.apiSuccess({
+            redirect: api.redirect,
+            message: api.message,
+          }));
+        }
         return response;
       } catch (error) {
         console.error(`request ${getApiPath(api.path)} 错误`);
         console.error(`request params`, req.payload);
         console.error(`message`, error);
         yield call(checkLoading, api, 'end');
-        yield put(createAction<any>(API_REQUEST_COMPLETE_ACTIONNAME)({
-          actionNames: actionNames,
+        yield call(sendError, actionNames, {
           req: payload,
           error: error,
           except: Object.assign({}, except),
-        }));
+        });
       }
     };
   }
@@ -236,32 +254,6 @@ function makeActionNames(modelName: string, api: ApiConfig, actionName): ApiActi
     request: `${baseActionName}_request`,
     success: `${baseActionName}_success`,
     error: `${baseActionName}_error`,
-  };
-}
-
-export function createRequestCompleteSaga(errorHandle, processRes) {
-  return function* () {
-    while (true) {
-      const r = yield take(API_REQUEST_COMPLETE_ACTIONNAME);
-      const error = errorHandle(r);
-      if (error) {
-        yield put(createAction<any>(r.payload.actionNames.error)({
-          req: r.payload.req,
-          error: error,
-          except: r.payload.except,
-        }));
-      } else {
-        yield put(createAction<any>(r.payload.actionNames.success)({
-          req: r.payload.req,
-          res: processRes(r.payload.res),
-        }));
-        const apiConfig = r.payload.apiConfig as ApiConfig;
-        yield put(normalActions.apiComplete({
-          redirect: apiConfig.redirect,
-          message: apiConfig.message,
-        }));
-      }
-    }
   };
 }
 

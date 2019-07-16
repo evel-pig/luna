@@ -1,9 +1,9 @@
 import { createAction } from 'redux-actions';
 
 const redirect = createAction<any>('LUNA_REDIRECT') as any;
-const apiComplete = createAction<any>('LUNA_API_COMPLETE') as any;
+const apiSuccess = createAction<any>('LUNA_API_SUCCESS') as any;
 
 export default {
   redirect,
-  apiComplete: apiComplete,
+  apiSuccess: apiSuccess,
 };

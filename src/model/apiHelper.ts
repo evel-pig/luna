@@ -1,5 +1,24 @@
 import { getQueryString } from './util';
 
+let _errorHandle = null;
+let _processRes = defaultProcessRes;
+
+export function setErrorHandle(e) {
+  _errorHandle = e;
+}
+
+export function setProcessRes(res) {
+  _processRes = res;
+}
+
+export function getErrorHandle() {
+  return _errorHandle;
+}
+
+export function getProcessRes() {
+  return _processRes;
+}
+
 export type ApiPath = string | (() => string);
 
 let _basePath: ApiPath = '';

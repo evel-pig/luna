@@ -1,5 +1,5 @@
 import { initAction, ActionNamesType, SimpleActionConfigs } from './initAction';
-import { initApi, ApiActionConfigs, ApiActionNamesType, createRequestCompleteSaga,
+import { initApi, ApiActionConfigs, ApiActionNamesType,
 ApiActionNames,
 Api, getAutoLoadingActionNames, ApiConfig, AutoLoading} from './initApi';
 import { handleActions as handleActionsCore } from 'redux-actions';
@@ -10,8 +10,7 @@ import createRestApi, { RestApiActionConfigs, RestApi, RestApiActionNamesType, R
 import { CreateShowLoadingOptions, createShowLoadingMiddleware
 , CreateApiErrorOptions, createApiErrorMiddleware, CreateApiSuccessMiddlewareOptions
 , createApiSuccessMiddleware } from './middlewares';
-import { setBasePath, ApiPath, defaultProcessRes, setMessageObj } from './apiHelper';
-import { configureApi } from '../hooks/useApi/api';
+import { setBasePath, ApiPath, setMessageObj, setErrorHandle, setProcessRes, defaultProcessRes } from './apiHelper';
 export { isRequestAction, setRequestHeaders } from './apiHelper';
 
 let _globalAutoLoading: AutoLoading = false;
@@ -211,17 +210,10 @@ export function configureModel(options: ConfigureModelOptions = {}) {
     return null;
   };
 
-  const requestCompleteSaga = createRequestCompleteSaga(
-    errorHandle,
-    options.processRes || defaultProcessRes,
-  );
-  configureApi({
-    errorHandle,
-    processRes: options.processRes,
-  });
+  setErrorHandle(errorHandle);
+  setProcessRes(options.processRes || defaultProcessRes);
 
   const sagas = [
-    requestCompleteSaga,
   ];
 
   setMessageObj(options.message);

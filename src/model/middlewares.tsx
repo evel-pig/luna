@@ -42,7 +42,7 @@ export interface CreateApiSuccessMiddlewareOptions {
 export const createApiSuccessMiddleware = (options: CreateApiSuccessMiddlewareOptions) => store => next => action => {
   let result = next(action);
 
-  if (action.type === normalActions.apiComplete().type) {
+  if (action.type === normalActions.apiSuccess().type) {
     if (options && options.handleSuccess) {
       options.handleSuccess(action, next, result);
     } else {
