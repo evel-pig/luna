@@ -123,7 +123,7 @@ export default function Counter (props: CounterProps) {
 
 ### useApi
 
-网络请求的Hooks版本（会触发model的错误处理）
+网络请求的Hooks版本(会触发model的错误处理）
 
 ```typescript
 import { useApi } from '@dfxk/luna';
