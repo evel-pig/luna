@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from './api';
 import { useDispatch } from 'react-redux';
 import { ApiOptionsConfig, ApiSuccessMessage } from '../../model/apiHelper';
@@ -17,11 +17,13 @@ export default function useApi<T = any>(
     requestFirstTime: true,
     ...options,
   };
-  const [ data, setData ] = useState({} as T);
-  const [ loading, setLoading ] = useState(false);
-  const [ success, setSuccess ] = useState(false);
+  const data = useRef<T>({} as any);
+  const prevParams = useRef(apiOptions.data);
+  const [ status, setStatus ] = useState({
+    loading: false,
+    success: false,
+  });
   let canSetData = true;
-  const [ prevParams, setPrevParams ] = useState(apiOptions.data);
   let dispatch = null;
   try {
     dispatch = useDispatch();
@@ -39,20 +41,24 @@ export default function useApi<T = any>(
     }
   }
 
-  function request(newParams = prevParams, newOptions = apiOptions.options) {
-    setPrevParams(newParams);
-    setLoading(true);
-    setSuccess(false);
+  function request(newParams = prevParams.current, newOptions = apiOptions.options) {
+    setStatus({
+      loading: true,
+      success: false,
+    });
     canSetData = true;
+    prevParams.current = newParams;
     api.request({
       ...apiOptions,
       data: newParams,
       options: newOptions,
     }).then(resData => {
-      setLoading(false);
       if (canSetData) {
-        setData(resData);
-        setSuccess(true);
+        data.current = resData;
+        setStatus({
+          loading: false,
+          success: true,
+        });
         if (dispatch) {
           dispatch(normalActions.apiSuccess({
             message: realOptions.message,
@@ -61,8 +67,10 @@ export default function useApi<T = any>(
       }
     }).catch(err => {
       console.log(err);
-      setSuccess(false);
-      setLoading(false);
+      setStatus({
+        loading: false,
+        success: false,
+      });
       sendError(err);
     });
   }
@@ -78,9 +86,9 @@ export default function useApi<T = any>(
   }, [apiOptions.path]);
 
   return {
-    data,
+    data: data.current,
     request,
-    loading,
-    success,
+    loading: status.loading,
+    success: status.success,
   };
 }
