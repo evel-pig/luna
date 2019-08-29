@@ -7,6 +7,7 @@ import normalActions from '../../model/normalActions';
 export interface UseApiOptions {
   requestFirstTime?: boolean;
   message?: ApiSuccessMessage;
+  clearDataWhenRequestError?: boolean;
 }
 
 export default function useApi<T = any>(
@@ -15,6 +16,7 @@ export default function useApi<T = any>(
 ) {
   const realOptions: UseApiOptions = {
     requestFirstTime: true,
+    clearDataWhenRequestError: false,
     ...options,
   };
   const data = useRef<T>({} as any);
@@ -67,6 +69,9 @@ export default function useApi<T = any>(
       }
     }).catch(err => {
       console.log(err);
+      if (realOptions.clearDataWhenRequestError) {
+        data.current = {} as T;
+      }
       setStatus({
         loading: false,
         success: false,
