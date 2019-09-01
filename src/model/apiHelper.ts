@@ -105,17 +105,26 @@ export function getApiOptions({ path, basePath, method, data, dataMode, options 
   };
   // 匹配path中含有":"开头的路径
   const pathKeys = truePath.match(reg) || [];
+  const realPathKeys = [];
   pathKeys.forEach(pathKey => {
     const realPathKey = pathKey.replace('/:', '');
+    realPathKeys.push(realPathKey);
     if (realPathKey) {
       let pathId = data && data[realPathKey];
       if (pathId !== null && pathId !== undefined) {
         uri = uri.replace(pathKey, '/' + pathId);
-        delete data[realPathKey]; // 把对应的id取出来拼接到了uri,删除原始数据中的id;
+        // delete data[realPathKey];
       } else {
         console.error(`请检查传递参数是否缺少${realPathKey}`);
       }
     }
+  });
+  const newData = {};
+  Object.keys(data || {}).forEach(key => {
+    if (realPathKeys.indexOf(key) >= 0) {
+      return;
+    }
+    newData[key] = data[key];
   });
 
   let useQuery = false;
@@ -125,7 +134,7 @@ export function getApiOptions({ path, basePath, method, data, dataMode, options 
     useQuery = trueMethod === 'GET';
   }
   if (useQuery) {
-    let query = getQueryString(data);
+    let query = getQueryString(newData);
     if (query) {
       uri += '?' + query;
     }
@@ -134,7 +143,7 @@ export function getApiOptions({ path, basePath, method, data, dataMode, options 
       ...options,
       ...opts,
       method: trueMethod,
-      body: JSON.stringify(data) || null,
+      body: JSON.stringify(newData) || null,
     };
   }
 
