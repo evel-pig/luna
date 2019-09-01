@@ -63,7 +63,7 @@ export function getApiPath(path: ApiPath) {
   return '';
 }
 
-const reg = new RegExp(/\/:\w+/);
+const reg = new RegExp(/\/:\w+/g);
 
 export type ApiDataMode = 'query' | 'body';
 
@@ -104,16 +104,19 @@ export function getApiOptions({ path, basePath, method, data, dataMode, options 
     method: method,
   };
   // 匹配path中含有":"开头的路径
-  let pathKey = truePath.match(reg) && truePath.match(reg)[0].slice(2);
-  if (pathKey) {
-    let pathId = data && data[pathKey];
-    if (pathId !== null && pathId !== undefined) {
-      uri = uri.replace(reg, '/' + pathId);
-      delete data[pathKey]; // 把对应的id取出来拼接到了uri,删除原始数据中的id;
-    } else {
-      console.error(`请检查传递参数是否缺少${pathKey}`);
+  const pathKeys = truePath.match(reg) || [];
+  pathKeys.forEach(pathKey => {
+    const realPathKey = pathKey.replace('/:', '');
+    if (realPathKey) {
+      let pathId = data && data[realPathKey];
+      if (pathId !== null && pathId !== undefined) {
+        uri = uri.replace(pathKey, '/' + pathId);
+        delete data[realPathKey]; // 把对应的id取出来拼接到了uri,删除原始数据中的id;
+      } else {
+        console.error(`请检查传递参数是否缺少${realPathKey}`);
+      }
     }
-  }
+  });
 
   let useQuery = false;
   if (dataMode) {
