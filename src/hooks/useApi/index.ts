@@ -10,6 +10,12 @@ export interface UseApiOptions {
   clearDataWhenRequestError?: boolean;
 }
 
+interface ApiStatus<T> {
+  loading: boolean;
+  success: boolean;
+  data: T;
+}
+
 export default function useApi<T = any>(
   apiOptions: ApiOptionsConfig,
   options: UseApiOptions = { requestFirstTime: true },
@@ -19,11 +25,11 @@ export default function useApi<T = any>(
     clearDataWhenRequestError: false,
     ...options,
   };
-  const data = useRef<T>({} as any);
   const prevParams = useRef(apiOptions.data);
-  const [ status, setStatus ] = useState({
+  const [ status, setStatus ] = useState<ApiStatus<T>>({
     loading: false,
     success: false,
+    data: {} as T,
   });
   let canSetData = true;
   let dispatch = null;
@@ -45,6 +51,7 @@ export default function useApi<T = any>(
 
   function request(newParams = prevParams.current, newOptions = apiOptions.options) {
     setStatus({
+      ...status,
       loading: true,
       success: false,
     });
@@ -56,10 +63,10 @@ export default function useApi<T = any>(
       options: newOptions,
     }).then(resData => {
       if (canSetData) {
-        data.current = resData;
         setStatus({
           loading: false,
           success: true,
+          data: resData,
         });
         if (dispatch) {
           dispatch(normalActions.apiSuccess({
@@ -69,10 +76,8 @@ export default function useApi<T = any>(
       }
     }).catch(err => {
       console.log(err);
-      if (realOptions.clearDataWhenRequestError) {
-        data.current = {} as T;
-      }
       setStatus({
+        data: realOptions.clearDataWhenRequestError ? {} as T : status.data,
         loading: false,
         success: false,
       });
@@ -91,7 +96,7 @@ export default function useApi<T = any>(
   }, [apiOptions.path]);
 
   return {
-    data: data.current,
+    data: status.data,
     request,
     loading: status.loading,
     success: status.success,
