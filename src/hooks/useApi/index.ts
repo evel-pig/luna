@@ -50,10 +50,12 @@ export default function useApi<T = any>(
   }
 
   function request(newParams = prevParams.current, newOptions = apiOptions.options) {
-    setStatus({
-      ...status,
+    setStatus(s => {
+      return {
+        ...s,
       loading: true,
       success: false,
+      };
     });
     canSetData = true;
     prevParams.current = newParams;
@@ -76,10 +78,12 @@ export default function useApi<T = any>(
       }
     }).catch(err => {
       console.log(err);
-      setStatus({
-        data: realOptions.clearDataWhenRequestError ? {} as T : status.data,
-        loading: false,
-        success: false,
+      setStatus(s => {
+        return {
+          data: realOptions.clearDataWhenRequestError ? {} as T : s.data,
+          loading: false,
+          success: false,
+        };
       });
       sendError(err);
     });
