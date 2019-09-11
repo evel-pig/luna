@@ -8,6 +8,7 @@ export interface UseApiOptions {
   requestFirstTime?: boolean;
   message?: ApiSuccessMessage;
   clearDataWhenRequestError?: boolean;
+  defaultLoading?: boolean;
 }
 
 interface ApiStatus<T> {
@@ -23,11 +24,12 @@ export default function useApi<T = any>(
   const realOptions: UseApiOptions = {
     requestFirstTime: true,
     clearDataWhenRequestError: false,
+    defaultLoading: false,
     ...options,
   };
   const prevParams = useRef(apiOptions.data);
   const [ status, setStatus ] = useState<ApiStatus<T>>({
-    loading: false,
+    loading: realOptions.defaultLoading,
     success: false,
     data: {} as T,
   });
