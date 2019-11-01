@@ -17,6 +17,20 @@ interface ApiStatus<T> {
   data: T;
 }
 
+/**
+ * 注入请求参数
+ */
+let getCommonParams = () => {
+  return {};
+};
+
+/**
+ * 配置注入请求参数方法
+ */
+export function setGetCommonParams(p: () => any) {
+  getCommonParams = p;
+}
+
 export default function useApi<T = any>(
   apiOptions: ApiOptionsConfig,
   options: UseApiOptions = { requestFirstTime: true },
@@ -63,7 +77,10 @@ export default function useApi<T = any>(
     prevParams.current = newParams;
     api.request({
       ...apiOptions,
-      data: newParams,
+      data: {
+        ...newParams,
+        ...getCommonParams(),
+      },
       options: newOptions,
     }).then(resData => {
       if (canSetData) {
