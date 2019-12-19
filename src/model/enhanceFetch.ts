@@ -4,7 +4,7 @@ require('es6-promise').polyfill();
 /**
  * check network
  */
-function checkNetwork(res) {
+let checkNetwork = (res) => {
   if (res.status / 200 !== 1) {
     return Promise.reject({
       des: `http status ${res.status}, network error`,
@@ -12,6 +12,10 @@ function checkNetwork(res) {
     });
   }
   return res;
+}
+
+export function setCheckNextWork(p: () => any) {
+  checkNetwork = p;
 }
 
 /**
