@@ -12,9 +12,9 @@ let checkNetwork = (res) => {
     });
   }
   return res;
-}
+};
 
-export function setCheckNextWork(p: () => any) {
+export function setCheckNextWork(p: (res) => any) {
   checkNetwork = p;
 }
 
